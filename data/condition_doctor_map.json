@@ -1,0 +1,36 @@
+{
+  "neurological issue": "Neurologist",
+  "migraine": "Neurologist",
+  "low blood pressure": "General Physician",
+  "cardiac issue": "Cardiologist",
+  "sinus issue": "ENT Specialist",
+  "ent issue": "ENT Specialist",
+
+  "respiratory issue": "Pulmonologist",
+  "infection": "General Physician",
+  "viral illness": "General Physician",
+  "allergy": "Allergist",
+  "poor circulation": "Vascular Specialist",
+
+  "digestive issue": "Gastroenterologist",
+  "acidity": "Gastroenterologist",
+
+  "hormonal issue": "Endocrinologist",
+
+  "musculoskeletal issue": "Orthopedic",
+  "arthritis": "Orthopedic",
+
+  "skin issue": "Dermatologist",
+
+  "mental health issue": "Psychiatrist",
+
+  "kidney issue": "Nephrologist",
+  "general issue": "General Physician",
+
+  
+  "pregnancy_related": "Gynecologist",
+  "gynecological_issue": "Gynecologist",
+  "pediatric_issue": "Pediatrician"
+
+
+}

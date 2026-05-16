@@ -1,0 +1,122 @@
+{
+  "migraine": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+  "neurological issue": {
+    "severity": "high",
+    "critical": true,
+    "historyDecay": "never"
+  },
+  "low blood pressure": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+
+  "respiratory issue": {
+    "severity": "medium",
+    "critical": true,
+    "historyDecay": "slow"
+  },
+  "sinus issue": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+  "ent issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+
+  "cardiac issue": {
+    "severity": "high",
+    "critical": true,
+    "historyDecay": "never"
+  },
+  "poor circulation": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "slow"
+  },
+
+  "digestive issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+  "acidity": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+
+  "hormonal issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "slow"
+  },
+
+  "musculoskeletal issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+  "arthritis": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "slow"
+  },
+
+  "skin issue": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+  "allergy": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+
+  "mental health issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "slow"
+  },
+
+  "infection": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "medium"
+  },
+  "viral illness": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+  "general issue": {
+    "severity": "low",
+    "critical": false,
+    "historyDecay": "fast"
+  },
+
+  "pregnancy_related": {
+    "severity": "high",
+    "critical": true,
+    "historyDecay": "never"
+  },
+  "gynecological_issue": {
+    "severity": "medium",
+    "critical": false,
+    "historyDecay": "slow"
+  },
+
+  "pediatric_issue": {
+    "severity": "high",
+    "critical": true,
+    "historyDecay": "slow"
+  }
+}
