@@ -138,6 +138,11 @@ otpExpiry: {
   default: null
 },
 
+lastOtpSentAt: {
+  type: Date,
+  default: null
+},
+
 isOtpVerified: {
   type: Boolean,
   default: false

@@ -1,36 +1,31 @@
 const express = require("express");
 const router = express.Router();
 
-const doctorAuthController = require("../controllers/doctorAuthController");
+const {
+  registerDoctor,
+  loginDoctor,
+  verifyDoctorOtp,
+  verifyLoginOtp,
+  resendOtp // ✅ ADD THIS
+} = require("../controllers/doctorAuthController");
 
 const upload = require("../middleware/uploadDoctorPhoto");
 
-// 🔍 DEBUG (optional but useful)
-console.log("registerDoctor:", typeof doctorAuthController.registerDoctor);
-console.log("loginDoctor:", typeof doctorAuthController.loginDoctor);
-console.log("verifyDoctorOtp:", typeof doctorAuthController.verifyDoctorOtp);
-console.log("verifyLoginOtp:", typeof doctorAuthController.verifyLoginOtp);
+/* ================= AUTH ROUTES ================= */
 
 // ✅ Register (with photo upload)
-router.post(
-  "/register",
-  upload.single("photo"),
-  doctorAuthController.registerDoctor
-);
+router.post("/register", upload.single("photo"), registerDoctor);
 
-// ✅ Login
-router.post(
-  "/login",
-  doctorAuthController.loginDoctor
-);
+// ✅ Login (password → OTP)
+router.post("/login", loginDoctor);
 
-// ✅ OTP ROUTES (SAFE CHECK)
-if (doctorAuthController.verifyDoctorOtp) {
-  router.post("/verify-otp", doctorAuthController.verifyDoctorOtp);
-}
+// ✅ Verify Register OTP
+router.post("/verify-otp", verifyDoctorOtp);
 
-if (doctorAuthController.verifyLoginOtp) {
-  router.post("/verify-login-otp", doctorAuthController.verifyLoginOtp);
-}
+// ✅ Verify Login OTP
+router.post("/verify-login-otp", verifyLoginOtp);
+
+// ✅ 🔥 NEW: Resend OTP
+router.post("/resend-otp", resendOtp);
 
 module.exports = router;

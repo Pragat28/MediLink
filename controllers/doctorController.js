@@ -110,12 +110,6 @@ exports.searchDoctors = async (req, res) => {
       query.rating = { $gte: rating };
     }
 
-    /* EXPERIENCE FILTER */
-
-    if (experience) {
-      query.experience = { $gte: experience };
-    }
-
     /* ✅ NEW: AVAILABILITY FILTER (MAIN FIX) */
 
     query.$or = [

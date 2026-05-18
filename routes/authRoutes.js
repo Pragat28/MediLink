@@ -4,8 +4,9 @@ const router = express.Router();
 const {
   registerPatient,
   loginPatient,
-  verifyPatientOtp,          // ✅ NEW
-  verifyPatientLoginOtp      // ✅ NEW
+  verifyPatientOtp,
+  verifyPatientLoginOtp,
+  resendOtp // ✅ ADD THIS
 } = require("../controllers/authController");
 
 const auth = require("../middleware/authMiddleware");
@@ -15,10 +16,11 @@ const auth = require("../middleware/authMiddleware");
 router.post("/register", registerPatient);
 router.post("/login", loginPatient);
 
-/* 🔥 NEW OTP ROUTES */
+/* 🔥 OTP ROUTES */
 
 router.post("/verify-otp", verifyPatientOtp);
 router.post("/verify-login-otp", verifyPatientLoginOtp);
+router.post("/resend-otp", resendOtp); // ✅ NEW
 
 /* ================= PROFILE ================= */
 

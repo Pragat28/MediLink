@@ -29,6 +29,8 @@ app.use("/api/auth", require("./routes/authRoutes"));
 // Doctor auth
 app.use("/api/doctor-auth", require("./routes/doctorAuthRoutes"));
 
+app.use("/api/forgot-password", require("./routes/forgotPassRoutes"));
+
 // Doctor list / search
 app.use("/api/doctors", require("./routes/doctorRoutes"));
 
