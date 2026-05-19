@@ -17,7 +17,7 @@ connectDB();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://medi-link-frontend-beta.vercel.app/", // your production Vercel URL
+    "https://medi-link-frontend-beta.vercel.app", // your production Vercel URL
   ],
   credentials: true,
 }));
