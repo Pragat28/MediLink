@@ -8,7 +8,7 @@ const sendEmail = async (to, subject, text) => {
   const apiInstance = new Brevo.TransactionalEmailsApi();
   
   await apiInstance.sendTransacEmail({
-    sender: { name: "Medilink", email: "your-verified-sender@gmail.com" },
+    sender: { name: "MediLink", email: "medilink.verify@gmail.com" },
     to: [{ email: to }],
     subject,
     textContent: text
