@@ -57,6 +57,16 @@ app.use("/api/doctor-appointments", require("./routes/doctorAppointmentRoutes"))
 
 app.use("/api/admin", require("./routes/adminRoutes"));
 
+app.get("/test-email", async (req, res) => {
+  try {
+    const sendEmail = require("./utils/sendEmail");
+    await sendEmail("medilink.verify@gmail.com", "Test", "Hello from Render");
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 /* ================= ROOT ================= */
 
 app.get("/", (req, res) => {
