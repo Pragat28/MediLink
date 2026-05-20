@@ -1,12 +1,17 @@
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+const Brevo = require("@getbrevo/brevo");
+
+const client = Brevo.ApiClient.instance;
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
 const sendEmail = async (to, subject, text) => {
-  await resend.emails.send({
-    from: "Medilink <onboarding@resend.dev>", // use this until you verify a domain
-    to,
+  const apiInstance = new Brevo.TransactionalEmailsApi();
+  
+  await apiInstance.sendTransacEmail({
+    sender: { name: "Medilink", email: "your-verified-sender@gmail.com" },
+    to: [{ email: to }],
     subject,
-    text
+    textContent: text
   });
 };
 
