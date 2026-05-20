@@ -1,15 +1,21 @@
-const SibApiV3Sdk = require("@getbrevo/brevo");
-
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-apiInstance.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
+const axios = require("axios");
 
 const sendEmail = async (to, subject, text) => {
-  await apiInstance.sendTransacEmail({
-    sender: { name: "MediLink", email: "medilink.verify@gmail.com" },
-    to: [{ email: to }],
-    subject,
-    textContent: text
-  });
+  await axios.post(
+    "https://api.brevo.com/v3/smtp/email",
+    {
+      sender: { name: "MediLink", email: "medilink.verify@gmail.com" },
+      to: [{ email: to }],
+      subject,
+      textContent: text
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 };
 
 module.exports = sendEmail;
