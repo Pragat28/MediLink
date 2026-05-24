@@ -32,27 +32,6 @@ const patientSchema = new mongoose.Schema(
     unique: true
   },
 
-  // 🔥 OTP SYSTEM ADDED
-  otp: {
-    type: String,
-    default: null
-  },
-
-  otpExpiry: {
-    type: Date,
-    default: null
-  },
-
-  lastOtpSentAt: {
-  type: Date,
-  default: null
-  },
-
-  isOtpVerified: {
-    type: Boolean,
-    default: false
-  },
-
   // Contact
   contactNumber: {
     type: String
