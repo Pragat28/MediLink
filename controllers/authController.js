@@ -1,25 +1,6 @@
 const Patient = require("../models/patientModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const sendEmail = require("../utils/sendEmail");
-
-/* 🔥 OTP GENERATOR */
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-/* 🔥 REUSABLE OTP SETTER */
-const setOtp = async (user) => {
-  const otp = generateOTP();
-
-  user.otp = otp;
-  user.otpExpiry = Date.now() + 5 * 60 * 1000;
-  user.lastOtpSentAt = Date.now();
-
-  await user.save();
-
-  return otp;
-};
 
 /* ================= REGISTER ================= */
 exports.registerPatient = async (req, res) => {
@@ -48,21 +29,6 @@ exports.registerPatient = async (req, res) => {
     const existingPatient = await Patient.findOne({ email });
 
     if (existingPatient) {
-      if (!existingPatient.isOtpVerified) {
-        const otp = await setOtp(existingPatient);
-
-        await sendEmail(
-          email,
-          "Patient Registration OTP",
-          `Your OTP is ${otp}. It will expire in 5 minutes.`
-        );
-
-        return res.status(200).json({
-          message: "OTP resent to your email",
-          email
-        });
-      }
-
       return res.status(400).json({
         message: "Email already exists"
       });
@@ -79,60 +45,14 @@ exports.registerPatient = async (req, res) => {
     } while (exists);
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = generateOTP();
 
-    await Patient.create({
+    const patient = await Patient.create({
       name,
       email,
       password: hashedPassword,
       patientCode: code,
-      contactNumber,
-      otp,
-      otpExpiry: Date.now() + 5 * 60 * 1000,
-      lastOtpSentAt: Date.now(),
-      isOtpVerified: false
+      contactNumber
     });
-
-    await sendEmail(
-      email,
-      "Patient Registration OTP",
-      `Your OTP is ${otp}. It will expire in 5 minutes.`
-    );
-
-    res.status(201).json({
-      message: "OTP sent to your email",
-      email
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/* ================= VERIFY REGISTER OTP ================= */
-exports.verifyPatientOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const patient = await Patient.findOne({ email });
-
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-
-    if (patient.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (patient.otpExpiry < Date.now()) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-
-    patient.isOtpVerified = true;
-    patient.otp = null;
-    patient.otpExpiry = null;
-
-    await patient.save();
 
     const token = jwt.sign(
       { id: patient._id },
@@ -140,14 +60,14 @@ exports.verifyPatientOtp = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({
+    res.status(201).json({
       message: "Registration successful",
       token,
       patient
     });
 
   } catch (err) {
-    res.status(500).json({ message: "OTP verification failed" });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -172,54 +92,6 @@ exports.loginPatient = async (req, res) => {
       });
     }
 
-    if (!patient.isOtpVerified) {
-      return res.status(403).json({
-        message: "Please verify your email first"
-      });
-    }
-
-    const otp = await setOtp(patient);
-
-    await sendEmail(
-      email,
-      "Patient Login OTP",
-      `Your login OTP is ${otp}`
-    );
-
-    res.json({
-      message: "OTP sent to your email",
-      email
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/* ================= VERIFY LOGIN OTP ================= */
-exports.verifyPatientLoginOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const patient = await Patient.findOne({ email });
-
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-
-    if (patient.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (patient.otpExpiry < Date.now()) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-
-    patient.otp = null;
-    patient.otpExpiry = null;
-
-    await patient.save();
-
     const token = jwt.sign(
       { id: patient._id },
       process.env.JWT_SECRET,
@@ -233,36 +105,6 @@ exports.verifyPatientLoginOtp = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({ message: "OTP verification failed" });
-  }
-};
-
-/* ================= RESEND OTP ================= */
-exports.resendOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const patient = await Patient.findOne({ email });
-
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-
-    const otp = await setOtp(patient);
-
-    await sendEmail(
-      email,
-      "Patient OTP Resent",
-      `Your new OTP is ${otp}. It will expire in 5 minutes.`
-    );
-
-    res.json({
-      message: "OTP resent successfully"
-    });
-
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to resend OTP"
-    });
+    res.status(500).json({ error: err.message });
   }
 };
