@@ -127,36 +127,10 @@ default:"doctor",
 immutable:true
 },
 
-/* 🔥 OTP SYSTEM ADDED */
-otp: {
-  type: String,
-  default: null
-},
-
-otpExpiry: {
-  type: Date,
-  default: null
-},
-
-lastOtpSentAt: {
-  type: Date,
-  default: null
-},
-
-isOtpVerified: {
-  type: Boolean,
-  default: false
-},
-
-/* 🔥 UPDATED VERIFICATION FLOW */
-isVerified: {
-  type: Boolean,
-  default: false
-},
 
 verificationStatus: {
   type: String,
-  enum: ["otp_pending", "pending", "approved", "rejected"],
+  enum: ["pending", "approved", "rejected"],
   default: "otp_pending"
 },
 
