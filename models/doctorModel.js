@@ -131,7 +131,7 @@ immutable:true
 verificationStatus: {
   type: String,
   enum: ["pending", "approved", "rejected"],
-  default: "otp_pending"
+  default: "pending"
 },
 
 verificationDetails: {
