@@ -1,152 +1,254 @@
 const Doctor = require("../models/doctorModel");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const Appointment = require("../models/appointmentModel");
 
-/* =================================================
-   DOCTOR REGISTER (NO OTP → ADMIN APPROVAL)
-================================================= */
-exports.registerDoctor = async (req, res) => {
+/* ======================
+   GET FILTER OPTIONS
+======================== */
+exports.getFilterOptions = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      specialty,
-      consultationFee,
-      mode,
-      street,
-      area,
-      gender,
-      about,
-      registrationNumber,
-      councilName,
-      degree
-    } = req.body;
 
-    const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    let { specialties } = req.query;
 
-    if (!email || !emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
+    if (!specialties) specialties = [];
+
+    if (typeof specialties === "string") {
+      specialties = [specialties];
     }
 
-    if (!password || password.length < 6) {
-      return res.status(400).json({
-        message: "Password must be at least 6 characters long"
-      });
+    if (
+      Array.isArray(specialties) &&
+      specialties.length === 1 &&
+      specialties[0].includes(",")
+    ) {
+      specialties = specialties[0].split(",");
     }
 
-    if (!phone || !phone.startsWith("+")) {
-      return res.status(400).json({
-        message: "Phone must include country code"
-      });
+    let query = {};
+
+    if (specialties.length) {
+      query.specialty = { $in: specialties };
     }
 
-    const existingDoctor = await Doctor.findOne({ email });
+    const doctors = await Doctor.find(query).select("address.area specialty");
 
-    if (existingDoctor) {
-      if (existingDoctor.verificationStatus === "rejected") {
-        await Doctor.deleteOne({ email });
-      } else {
-        return res.status(400).json({
-          message: "Doctor already exists"
-        });
-      }
-    }
+    let areas = doctors
+      .map(d => d.address?.area)
+      .filter(area => area && area.trim() !== "");
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : "";
+    areas = [...new Set(areas.map(a => a.trim()))];
 
-    const doctor = await Doctor.create({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      specialty,
-      consultationFee,
-      mode,
-      gender,
-      about,
-      photo: photoPath,
+    res.json({ areas });
 
-      verificationDetails: {
-        registrationNumber,
-        councilName,
-        degree
-      },
-
-      // ✅ IMPORTANT: direct to admin approval
-      verificationStatus: "pending",
-      isVerified: false,
-
-      address: {
-        street: street || "",
-        area: area || "",
-        city: ""
-      },
-
-      availability: {
-        weekly: {},
-        overrides: []
-      }
-    });
-
-    res.status(201).json({
-      message: "Registration successful. Await admin approval.",
-      email: doctor.email
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Error in doctor registration"
-    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-
-/* =================================================
-   LOGIN (NO OTP)
-================================================= */
-exports.loginDoctor = async (req, res) => {
+/* ======================
+   PATIENT SEARCH DOCTORS
+======================== */
+exports.searchDoctors = async (req, res) => {
   try {
-    const { email, password } = req.body;
 
-    const doctor = await Doctor.findOne({ email });
+    const {
+      specialties = [],
+      specialty,
+      area,
+      maxFee,
+      rating,
+      experience,
+      mode,
+      gender
+    } = req.body;
+
+    let query = {};
+
+    /* SPECIALTY FILTER */
+
+    if (specialty) {
+      query.specialty = specialty;
+    }
+    else if (specialties.length) {
+      query.specialty = { $in: specialties };
+    }
+
+    /* MODE FILTER */
+
+    if (mode === "online") {
+      query.mode = { $in: ["online", "both"] };
+    }
+
+    if (mode === "offline") {
+      query.mode = { $in: ["offline", "both"] };
+    }
+
+    if (mode === "both") {
+      query.mode = "both";
+    }
+
+    /* GENDER FILTER */
+
+    if (gender) {
+      query.gender = gender;
+    }
+
+    /* AREA FILTER */
+
+    if (area) {
+      query["address.area"] = { $regex: area, $options: "i" };
+    }
+
+    /* FEE FILTER */
+
+    if (maxFee) {
+      query.consultationFee = { $lte: maxFee };
+    }
+
+    /* RATING FILTER */
+
+    if (rating) {
+      query.rating = { $gte: rating };
+    }
+
+    /* ✅ NEW: AVAILABILITY FILTER (MAIN FIX) */
+
+    query.$or = [
+      { "availability.weekly.monday.0": { $exists: true } },
+      { "availability.weekly.tuesday.0": { $exists: true } },
+      { "availability.weekly.wednesday.0": { $exists: true } },
+      { "availability.weekly.thursday.0": { $exists: true } },
+      { "availability.weekly.friday.0": { $exists: true } },
+      { "availability.weekly.saturday.0": { $exists: true } },
+      { "availability.weekly.sunday.0": { $exists: true } },
+      { "availability.overrides.0": { $exists: true } } // ✅ also include special slots
+    ];
+
+    const doctors = await Doctor.find(query)
+      .select("-password -__v")
+      .sort({ rating: -1 });
+
+    res.json({
+      count: doctors.length,
+      doctors
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ======================
+   VIEW DOCTOR PROFILE
+======================== */
+exports.getDoctorProfile = async (req, res) => {
+  try {
+
+    const doctor = await Doctor.findById(req.params.id)
+      .select("-password -__v");
 
     if (!doctor) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, doctor.password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // ✅ ADMIN APPROVAL CHECK
-    if (doctor.verificationStatus !== "approved") {
-      return res.status(403).json({
-        message: "Account not approved yet"
+      return res.status(404).json({
+        error: "Doctor not found"
       });
     }
 
-    const token = jwt.sign(
-      { id: doctor._id, role: "doctor" },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    res.json(doctor);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ======================
+   REQUEST APPOINTMENT
+======================== */
+exports.requestAppointment = async (req, res) => {
+  try {
+
+    const patientId = req.user.id || req.user.patientId;
+
+    const { doctorId, date, slotTime } = req.body;
+
+    if (!doctorId || !date || !slotTime) {
+      return res.status(400).json({
+        error: "doctorId, date and slotTime are required"
+      });
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        error: "Doctor not found"
+      });
+    }
+
+    const appointment = await Appointment.create({
+      patient: patientId,
+      doctor: doctorId,
+      date,
+      slotTime,
+      status: "pending"
+    });
+
+    res.status(201).json({
+      message: "Appointment request sent",
+      appointment
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ======================
+   DOCTOR PROFILE
+======================== */
+exports.getMyProfile = async (req, res) => {
+  try {
+
+    const doctorId = req.user.id || req.user.doctorId;
+
+    const doctor = await Doctor.findById(doctorId)
+      .select("-password -__v");
+
+    if (!doctor) {
+      return res.status(404).json({
+        error: "Doctor not found"
+      });
+    }
+
+    res.json(doctor);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ======================
+   DOCTOR APPOINTMENTS
+======================== */
+exports.getDoctorAppointments = async (req, res) => {
+  try {
+
+    const doctorId = req.user.id || req.user.doctorId;
+
+    const appointments = await Appointment.find({
+      doctor: doctorId
+    })
+      .populate("patient", "name email")
+      .sort({ createdAt: -1 });
 
     res.json({
-      message: "Login successful",
-      token,
-      doctor
+      count: appointments.length,
+      appointments
     });
 
-  } catch (error) {
+  } catch (err) {
+
     res.status(500).json({
-      message: "Server error in loginDoctor"
+      error: err.message
     });
+
   }
 };
