@@ -34,11 +34,11 @@ exports.registerPatient = async (req, res) => {
       });
     }
 
+    // generate patient code
     const generateCode = () =>
       Math.floor(1000 + Math.random() * 9000).toString();
 
     let code, exists;
-
     do {
       code = generateCode();
       exists = await Patient.findOne({ patientCode: code });
@@ -51,7 +51,8 @@ exports.registerPatient = async (req, res) => {
       email,
       password: hashedPassword,
       patientCode: code,
-      contactNumber
+      contactNumber,
+      isOtpVerified: true // ✅ mark as verified directly
     });
 
     const token = jwt.sign(
@@ -108,3 +109,8 @@ exports.loginPatient = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/* ================= REMOVE THESE ================= */
+// ❌ verifyPatientOtp
+// ❌ verifyPatientLoginOtp
+// ❌ resendOtp
