@@ -50,7 +50,7 @@ exports.registerDoctor = async (req, res) => {
     }
 
     // ✅ REMOVED bcrypt.hash() — pre-save hook in doctorModel handles hashing
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : "";
+    const photoPath = req.file ? req.file.path : "";
     const doctor = await Doctor.create({
       name,
       email,
