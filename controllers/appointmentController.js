@@ -1,6 +1,6 @@
 const Appointment = require("../models/appointmentModel");
 const Doctor = require("../models/doctorModel");
-const Patient = require("../models/patientModel"); // ✅ ADDED
+const Patient = require("../models/patientModel");
 
 /**
  * PATIENT → REQUEST APPOINTMENT
@@ -27,7 +27,6 @@ exports.requestAppointment = async (req, res) => {
       });
     }
 
-    // ✅ Doctor exists
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
@@ -66,9 +65,8 @@ exports.requestAppointment = async (req, res) => {
     }
 
     /**
-     * 🔥 RULE 3 → SLOT CAPACITY
+     * RULE 3 → SLOT CAPACITY
      */
-
     const day = new Date(date)
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
@@ -108,7 +106,7 @@ exports.requestAppointment = async (req, res) => {
     }
 
     /**
-     * ✅ GET PATIENT CODE (NEW)
+     * GET PATIENT CODE
      */
     const patient = await Patient.findById(patientId);
 
@@ -121,8 +119,6 @@ exports.requestAppointment = async (req, res) => {
       date,
       slotTime,
       status: "pending",
-
-      // ✅ ADDED (IMPORTANT)
       patientCode: patient.patientCode
     });
 
@@ -147,7 +143,7 @@ exports.getMyAppointments = async (req, res) => {
       patient: req.user.id,
       status: { $ne: "expired" }
     })
-      .populate("doctor", "name email phone specialty rating")
+      .populate("doctor", "name email phone specialty rating address") // ✅ added address
       .sort({ createdAt: -1 });
 
     res.json({
