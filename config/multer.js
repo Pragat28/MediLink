@@ -10,4 +10,13 @@ const storage = new CloudinaryStorage({
   },
 });
 
-module.exports = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only images allowed"), false);
+  }
+};
+
+module.exports = multer({ storage, fileFilter });
