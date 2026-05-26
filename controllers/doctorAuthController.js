@@ -6,6 +6,9 @@ const jwt = require("jsonwebtoken");
    DOCTOR REGISTER (NO OTP → DIRECT PENDING)
 ================================================= */
 exports.registerDoctor = async (req, res) => {
+  console.log("REGISTER DOCTOR HIT"); // ✅ add this
+  console.log("BODY:", req.body);      // ✅ add this
+  console.log("FILE:", req.file);      // ✅ add this
   try {
     const {
       name,
