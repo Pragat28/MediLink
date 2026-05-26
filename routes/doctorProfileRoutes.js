@@ -7,7 +7,8 @@ const {
 } = require("../controllers/doctorProfileController");
 
 const authDoctor = require("../middleware/authDoctor");
-const upload = require("../middleware/uploadDoctorPhoto"); // reuse multer
+const upload = require("../config/multer");
+// reuse multer
 
 // View profile
 router.get("/me", authDoctor, getDoctorProfile);
