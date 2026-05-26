@@ -6,7 +6,7 @@ const {
   loginDoctor
 } = require("../controllers/doctorAuthController");
 
-const upload = require("../middleware/uploadDoctorPhoto");
+const upload = require("../config/multer");
 
 /* ================= AUTH ROUTES ================= */
 
