@@ -57,7 +57,7 @@ exports.updateDoctorProfile = async (req, res) => {
     /* ================= PHOTO UPLOAD ================= */
 
     if (req.file) {
-      updates.photo = `/uploads/${req.file.filename}`;
+      updates.photo = req.file.path;
     }
 
     /* ================= PROTECTED FIELDS ================= */
