@@ -11,7 +11,7 @@ const upload = require("../config/multer");
 /* ================= AUTH ROUTES ================= */
 
 // ✅ Register (with photo upload)
-router.post("/register", registerDoctor);
+router.post("/register", upload.single("photo"), registerDoctor);
 
 // ✅ Login (direct login, no OTP)
 router.post("/login", loginDoctor);
