@@ -1,4 +1,5 @@
 const Doctor = require("../models/doctorModel");
+const cloudinary = require("../config/cloudinary");
 
 /* =================================================
    GET LOGGED-IN DOCTOR PROFILE
@@ -43,8 +44,6 @@ exports.getDoctorProfile = async (req, res) => {
   }
 };
 
-
-
 /* =================================================
    UPDATE DOCTOR PROFILE
 ================================================= */
@@ -57,7 +56,16 @@ exports.updateDoctorProfile = async (req, res) => {
     /* ================= PHOTO UPLOAD ================= */
 
     if (req.file) {
-      updates.photo = req.file.path;
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "medilink" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+      updates.photo = result.secure_url;
     }
 
     /* ================= PROTECTED FIELDS ================= */
