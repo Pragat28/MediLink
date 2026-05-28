@@ -33,12 +33,12 @@ exports.getAppointmentRequests = async (req, res) => {
         date: appt.date,
         slotTime: appt.slotTime,
         status: appt.status,
+        mode: appt.mode, // 🔥 ADD THIS
         verificationCode: appt.verificationCode || null,
         rating: appt.rating || null,
         review: appt.review || "",
         rated: appt.rated || false
       });
-
     });
 
     res.json(Object.values(grouped));
@@ -71,14 +71,15 @@ exports.approveAppointment = async (req, res) => {
 
     // ✅ Return patient email + reminder messages in response
     res.json({
-      message: "Appointment approved",
-      patientEmail: appointment.patient.email,
-      patientName: appointment.patient.name,
-      slotTime: appointment.slotTime,
-      date: appointment.date,
-      doctorReminder: `Please send the meeting link to the patient's email: ${appointment.patient.email} before the appointment at ${appointment.slotTime} on ${new Date(appointment.date).toLocaleDateString()}.`,
-      patientMessage: `Your appointment has been confirmed! The doctor will send you the meeting link on your registered email (${appointment.patient.email}) before the appointment time.`
-    });
+        message: "Appointment approved",
+        patientEmail: appointment.patient.email,
+        patientName: appointment.patient.name,
+        slotTime: appointment.slotTime,
+        date: appointment.date,
+        mode: appointment.mode, // 🔥 ADD THIS
+        doctorReminder: `Please send the meeting link to the patient's email: ${appointment.patient.email} before the appointment at ${appointment.slotTime} on ${new Date(appointment.date).toLocaleDateString()}.`,
+        patientMessage: `Your appointment has been confirmed! The doctor will send you the meeting link on your registered email (${appointment.patient.email}) before the appointment time.`
+      });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -185,10 +186,10 @@ exports.verifyAppointment = async (req, res) => {
     const today = new Date();
     const appointmentDate = new Date(appointment.date);
 
-    today.setHours(0,0,0,0);
-    appointmentDate.setHours(0,0,0,0);
-
-    if (today < appointmentDate) {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const appointmentStr = new Date(appointment.date).toISOString().split("T")[0];
+    
+    if (todayStr < appointmentStr) {
       return res.status(400).json({
         message: "Appointment cannot be completed before the appointment date"
       });
