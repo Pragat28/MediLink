@@ -110,17 +110,17 @@ exports.searchDoctors = async (req, res) => {
       query.rating = { $gte: rating };
     }
 
-    /* ✅ NEW: AVAILABILITY FILTER (MAIN FIX) */
+    /* AVAILABILITY FILTER */
 
     query.$or = [
-      { "availability.weekly.monday.0": { $exists: true } },
-      { "availability.weekly.tuesday.0": { $exists: true } },
+      { "availability.weekly.monday.0":    { $exists: true } },
+      { "availability.weekly.tuesday.0":   { $exists: true } },
       { "availability.weekly.wednesday.0": { $exists: true } },
-      { "availability.weekly.thursday.0": { $exists: true } },
-      { "availability.weekly.friday.0": { $exists: true } },
-      { "availability.weekly.saturday.0": { $exists: true } },
-      { "availability.weekly.sunday.0": { $exists: true } },
-      { "availability.overrides.0": { $exists: true } } // ✅ also include special slots
+      { "availability.weekly.thursday.0":  { $exists: true } },
+      { "availability.weekly.friday.0":    { $exists: true } },
+      { "availability.weekly.saturday.0":  { $exists: true } },
+      { "availability.weekly.sunday.0":    { $exists: true } },
+      { "availability.overrides.0":        { $exists: true } }
     ];
 
     const doctors = await Doctor.find(query)
@@ -153,6 +153,45 @@ exports.getDoctorProfile = async (req, res) => {
     }
 
     res.json(doctor);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ======================
+   GET DOCTOR REVIEWS
+   GET /api/doctors/:id/reviews
+======================== */
+exports.getDoctorReviews = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    // Verify doctor exists
+    const doctor = await Doctor.findById(id).select("_id");
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    const appointments = await Appointment.find({
+      doctor: id,
+      status: "completed",
+      rated: true
+    })
+      .populate("patient", "name")   // only pull patient name
+      .select("rating review createdAt patient")
+      .sort({ createdAt: -1 });      // newest first
+
+    const reviews = appointments.map(a => ({
+      _id:         a._id,
+      rating:      a.rating,
+      review:      a.review || "",
+      createdAt:   a.createdAt,
+      patientName: a.patient?.name || "Patient"
+    }));
+
+    res.json(reviews);
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -209,7 +248,7 @@ exports.getMyProfile = async (req, res) => {
 
     const doctorId = req.user.id || req.user.doctorId;
 
-    const doctor = await Doctor.findById(doctorId)
+    const Doctor = await Doctor.findById(doctorId)
       .select("-password -__v");
 
     if (!doctor) {
