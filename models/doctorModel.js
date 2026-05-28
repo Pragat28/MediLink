@@ -9,7 +9,8 @@ const slotSchema = new mongoose.Schema(
   maxPatients: {
     type: Number,
     default: 1
-  }
+  },
+  mode: { type: String, enum: ["online", "offline"], default: "offline" }
 },
 { _id:false }
 );
