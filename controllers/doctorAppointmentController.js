@@ -1,4 +1,5 @@
 const Appointment = require("../models/appointmentModel");
+const Patient = require("../models/patientModel");
 
 /**
  * GET all appointment requests for logged-in doctor
@@ -32,10 +33,7 @@ exports.getAppointmentRequests = async (req, res) => {
         date: appt.date,
         slotTime: appt.slotTime,
         status: appt.status,
-
-        // (can keep or remove, not used anymore)
         verificationCode: appt.verificationCode || null,
-
         rating: appt.rating || null,
         review: appt.review || "",
         rated: appt.rated || false
@@ -60,7 +58,7 @@ exports.approveAppointment = async (req, res) => {
       _id: req.params.id,
       doctor: req.user.id,
       status: "pending"
-    });
+    }).populate("patient", "name email"); // ✅ populate patient email
 
     if (!appointment) {
       return res.status(404).json({
@@ -71,8 +69,15 @@ exports.approveAppointment = async (req, res) => {
     appointment.status = "accepted";
     await appointment.save();
 
+    // ✅ Return patient email + reminder messages in response
     res.json({
-      message: "Appointment approved"
+      message: "Appointment approved",
+      patientEmail: appointment.patient.email,
+      patientName: appointment.patient.name,
+      slotTime: appointment.slotTime,
+      date: appointment.date,
+      doctorReminder: `Please send the meeting link to the patient's email: ${appointment.patient.email} before the appointment at ${appointment.slotTime} on ${new Date(appointment.date).toLocaleDateString()}.`,
+      patientMessage: `Your appointment has been confirmed! The doctor will send you the meeting link on your registered email (${appointment.patient.email}) before the appointment time.`
     });
 
   } catch (error) {
@@ -147,7 +152,7 @@ exports.cancelAppointmentByDoctor = async (req, res) => {
 };
 
 /**
- * ✅ UPDATED: VERIFY USING PATIENT CODE
+ * VERIFY USING PATIENT CODE
  */
 exports.verifyAppointment = async (req, res) => {
   try {
@@ -171,14 +176,12 @@ exports.verifyAppointment = async (req, res) => {
       });
     }
 
-    // ✅ NEW: CHECK PATIENT CODE (NOT verificationCode)
     if (appointment.patientCode !== code) {
       return res.status(400).json({
         message: "Invalid patient code"
       });
     }
 
-    // ✅ DATE CHECK (UNCHANGED)
     const today = new Date();
     const appointmentDate = new Date(appointment.date);
 
@@ -191,7 +194,6 @@ exports.verifyAppointment = async (req, res) => {
       });
     }
 
-    // ✅ COMPLETE
     appointment.status = "completed";
     await appointment.save();
 
@@ -206,7 +208,7 @@ exports.verifyAppointment = async (req, res) => {
 };
 
 /**
- * 🗓 DOCTOR → GET CONFIRMED APPOINTMENTS FOR CALENDAR
+ * DOCTOR → GET CONFIRMED APPOINTMENTS FOR CALENDAR
  */
 exports.getDoctorCalendar = async (req, res) => {
   try {
