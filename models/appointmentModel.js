@@ -7,19 +7,16 @@ const appointmentSchema = new mongoose.Schema(
     ref: "Patient",
     required: true
   },
-
   doctor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Doctor",
     required: true
   },
-
   // Appointment date
   date: {
     type: Date,
     required: true
   },
-
   // Slot time (IMPORTANT: should match "start-end")
   // example: "10:00-10:30"
   slotTime: {
@@ -27,7 +24,13 @@ const appointmentSchema = new mongoose.Schema(
     required: true,
     trim: true
   },
-
+  // ✅ Consultation mode for this appointment
+  mode: {
+    type: String,
+    enum: ["online", "offline"],
+    required: true,
+    default: "online"
+  },
   // Appointment status
   status: {
     type: String,
@@ -41,12 +44,10 @@ const appointmentSchema = new mongoose.Schema(
     ],
     default: "pending"
   },
-
   patientCode: {
-  type: String,
-  required: true
+    type: String,
+    required: true
   },
-
   // ⭐ Patient rating (1–5 stars)
   rating: {
     type: Number,
@@ -54,20 +55,17 @@ const appointmentSchema = new mongoose.Schema(
     max: 5,
     default: null
   },
-
   // 📝 Optional patient review
   review: {
     type: String,
     trim: true,
     default: ""
   },
-
   // Prevent rating twice
   rated: {
     type: Boolean,
     default: false
   }
-
 },
 { timestamps: true }
 );
@@ -81,7 +79,7 @@ appointmentSchema.index(
 );
 
 /**
- * ✅ (OPTIONAL BUT GOOD) INDEX FOR FAST SLOT CHECK
+ * ✅ INDEX FOR FAST SLOT CHECK
  */
 appointmentSchema.index({
   doctor: 1,
