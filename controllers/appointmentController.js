@@ -9,9 +9,9 @@ exports.requestAppointment = async (req, res) => {
   try {
 
     const patientId = req.user.id;
-    const { doctorId, date, slotTime } = req.body;
+    const { doctorId, date, slotTime, mode } = req.body; // ✅ added mode
 
-    if (!doctorId || !date || !slotTime) {
+    if (!doctorId || !date || !slotTime || !mode) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -92,6 +92,13 @@ exports.requestAppointment = async (req, res) => {
       });
     }
 
+    // ✅ Validate mode matches slot mode
+    if (selectedSlot.mode && selectedSlot.mode !== mode) {
+      return res.status(400).json({
+        message: `This slot is only available for ${selectedSlot.mode} consultations`
+      });
+    }
+
     const count = await Appointment.countDocuments({
       doctor: doctorId,
       date,
@@ -118,6 +125,7 @@ exports.requestAppointment = async (req, res) => {
       patient: patientId,
       date,
       slotTime,
+      mode, // ✅ added mode
       status: "pending",
       patientCode: patient.patientCode
     });
@@ -143,7 +151,7 @@ exports.getMyAppointments = async (req, res) => {
       patient: req.user.id,
       status: { $ne: "expired" }
     })
-      .populate("doctor", "name email phone specialty rating address") // ✅ added address
+      .populate("doctor", "name email phone specialty rating address")
       .sort({ createdAt: -1 });
 
     res.json({
