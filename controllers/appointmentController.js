@@ -9,7 +9,7 @@ exports.requestAppointment = async (req, res) => {
   try {
 
     const patientId = req.user.id;
-    const { doctorId, date, slotTime, mode } = req.body; // ✅ added mode
+    const { doctorId, date, slotTime, mode } = req.body;
 
     if (!doctorId || !date || !slotTime || !mode) {
       return res.status(400).json({ message: "All fields are required" });
@@ -99,11 +99,12 @@ exports.requestAppointment = async (req, res) => {
       });
     }
 
+    // ✅ Count only accepted appointments for capacity check
     const count = await Appointment.countDocuments({
       doctor: doctorId,
       date,
       slotTime,
-      status: { $in: ["pending", "accepted"] }
+      status: "accepted"
     });
 
     if (count >= (selectedSlot.maxPatients || 1)) {
@@ -125,7 +126,7 @@ exports.requestAppointment = async (req, res) => {
       patient: patientId,
       date,
       slotTime,
-      mode, // ✅ added mode
+      mode,
       status: "pending",
       patientCode: patient.patientCode
     });
