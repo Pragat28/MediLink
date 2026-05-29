@@ -257,9 +257,9 @@ exports.rateDoctor = async (req, res) => {
 
     const avgRating =
       ratedAppointments.length > 0
-        ? total / ratedAppointments.length
-        : 0;
-
+      ? parseFloat((total / ratedAppointments.length).toFixed(2))
+      : 0;
+    
     await Doctor.findByIdAndUpdate(appointment.doctor, {
       rating: avgRating
     });
