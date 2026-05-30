@@ -92,14 +92,12 @@ exports.requestAppointment = async (req, res) => {
       });
     }
 
-    // ✅ Validate mode matches slot mode
     if (selectedSlot.mode && selectedSlot.mode !== mode) {
       return res.status(400).json({
         message: `This slot is only available for ${selectedSlot.mode} consultations`
       });
     }
 
-    // ✅ Count only accepted appointments for capacity check
     const count = await Appointment.countDocuments({
       doctor: doctorId,
       date,
@@ -147,6 +145,7 @@ exports.requestAppointment = async (req, res) => {
  */
 exports.getMyAppointments = async (req, res) => {
   try {
+    const now = new Date();
 
     const appointments = await Appointment.find({
       patient: req.user.id,
@@ -155,9 +154,29 @@ exports.getMyAppointments = async (req, res) => {
       .populate("doctor", "name email phone specialty rating address")
       .sort({ createdAt: -1 });
 
-    res.json({
-      appointments
-    });
+    // On-the-fly expiry check
+    for (const appt of appointments) {
+      if (appt.status === "accepted" || appt.status === "pending") {
+        const slotEnd = appt.slotTime?.split("-")[1]; // "14:25-14:40" → "14:40"
+        if (slotEnd) {
+          const [hour, min] = slotEnd.split(":").map(Number);
+          const endTime = new Date(appt.date);
+          endTime.setHours(hour, min, 0, 0);
+
+          const grace = new Date(endTime.getTime() + 24 * 60 * 60 * 1000);
+
+          if (now > grace) {
+            appt.status = "expired";
+            await appt.save();
+          }
+        }
+      }
+    }
+
+    // Filter out newly expired ones from response
+    const active = appointments.filter(a => a.status !== "expired");
+
+    res.json({ appointments: active });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -259,7 +278,7 @@ exports.rateDoctor = async (req, res) => {
       ratedAppointments.length > 0
       ? parseFloat((total / ratedAppointments.length).toFixed(2))
       : 0;
-    
+
     await Doctor.findByIdAndUpdate(appointment.doctor, {
       rating: avgRating
     });
